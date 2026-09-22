@@ -23,6 +23,7 @@ your pipeline, not giving up.
 """
 
 from dataclasses import dataclass
+from sys import prefix
 
 import config
 from ingest import Document
@@ -97,7 +98,51 @@ def split_documents(documents: list[Document]) -> list[Chunk]:
       - Would splitting on paragraph breaks keep more thoughts intact than
         splitting on a character count?
     """
-    return fallback_split(documents)
+
+    chunks: list[Chunk] = []
+
+    for doc in documents:
+        text = doc.text
+
+        # Short documents pass directly
+        if len(text) < config.MIN_CHUNK:
+            chunks.append(Chunk(text=text,
+                                source=doc.source,
+                                index=0,
+                                produced_by="chunker.py::split_documents",))
+
+            continue
+
+        # Title is the first line; everything after it is the body.
+        title, _, body = text.partition("\n")
+        prefix=f"{title}\n\n"
+        paragraphs = [p.strip() for p in body.split("\n\n") if p.strip()]
+
+        # Merge short paragraphs forward until each chunk reaches MIN_CHUNK.
+        merged: list[str] = []
+        for paragraph in paragraphs:
+            if merged and len(prefix) + len(merged[-1]) < config.MIN_CHUNK:
+                merged[-1] = merged[-1] + "\n\n" + paragraph
+            else:
+                merged.append(paragraph)
+
+        # If the last chunk is still too short, fold it into the previous one.
+        if len(merged) > 1 and len(prefix) + len(merged[-1]) < config.MIN_CHUNK:
+            last = merged.pop()
+            merged[-1] = merged[-1] + "\n\n" + last
+
+        # Prefix every chunk with the title so it carries context.
+        for i, piece in enumerate(merged):
+            chunks.append(
+                Chunk(
+                    text=prefix + piece,
+                    source=doc.source,
+                    index=i,
+                    produced_by="chunker.py::split_documents",
+                )
+            )
+
+    return chunks
 
 
 def describe(chunks: list[Chunk]) -> str:
