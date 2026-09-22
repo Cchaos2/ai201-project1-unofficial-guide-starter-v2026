@@ -23,8 +23,10 @@ For at least 4 of my 5 test questions, the retrieved chunks include one that
 contains the answer.
 
 **Why this target:**
-<!-- e.g. "One of my questions is about a topic only two documents mention, so
-     I expect that one to be hard." -->
+Three of my questions have an answer in only one document, and two questions 
+have answers in two documents. However, there are topics that are discussed in several
+documents. Therefore, there is a possibility that for at least one question the right
+document does not reach the top 5 retrieved chunks.
 
 ---
 
@@ -35,6 +37,13 @@ Every answer the system produces names at least one source document.
 **Why this target:**
 <!-- Why all five and not four? What about your setup makes that achievable —
      or what would have to go wrong for it not to be? -->
+If the system does not produce at least one source document, then it is not 
+possible to verify the answer. For that reason, unlike the other criteria, 
+100% compliance is required here.
+
+Also, the GROUNDING_INSTRUCTIONS in generate.py specifically indicates: 
+"Name the document your answer came from, using the filename given in each 
+excerpt." Therefore, 100% success should be achievable.
 
 ---
 
@@ -50,48 +59,42 @@ in at least 4 of 5 tries.
      just keep five of them, or the "4 of 5" above has nothing to be 4 of. -->
 
 **Why this target:**
-<!-- What did your distances look like when you set the cutoff in Milestone 4?
-     Was there a clean gap, or did the two groups overlap? -->
+Even if the questions asked in this part are out of scope, some of them, 
+such as the question about ibuprofen for headaches, could be related to
+documents from the health center. For that reason, 4 out of 5 correct answers
+are accepted.
 
 ---
 
 ## 4. Something about your chunks
 
-<!-- YOU WRITE THIS ONE.
-
-     How would you know if your chunks were the right size? Name something
-     countable or observable.
-
-     Examples of the right shape — don't copy these, they should come from
-     what you actually saw in Milestone 3:
-       - "At least 4 of 5 sampled chunks read as a complete thought, with no
-          sentence cut in half at either end."
-       - "No chunk is shorter than 200 characters, since anything below that
-          in my corpus turned out to be a heading with no content under it." -->
-
-
+No chunk is shorter than 150 characters or longer than 400 characters.
 
 **Why this target:**
+Most of the documents are below 400 characters, so most of the documents 
+will have one chunk per document, allowing us to have all the required context
+to answer the questions. The ones that exceed 400 characters are the general 
+overviews of the houses (for example, housing_calder_annexe is 430 characters,
+while housing_old_brewhouse is about 549 characters). They contain different 
+types of information (the good, the bad, laundry, noise), so in those cases, 
+it could be beneficial to split the document into two chunks. 
 
-
+The 150-character floor avoids small fragments, such as a paragraph that only covers laundry 
+information. If a split would produce a chunk under 150 characters, then it is 
+merged with its neighboring chunk within the same document.
 
 ---
 
 ## 5. Your choice
 
-<!-- YOU WRITE THIS ONE TOO.
-
-     Pick something you actually care about getting right. It could be about
-     speed, about refusals, about a particular kind of question your corpus
-     handles badly, about source attribution being correct rather than merely
-     present — anything, as long as it names a number or an observable
-     outcome. -->
-
+For all the test questions, the answer is completed in under 5 seconds.
 
 
 **Why this target:**
-
-
+A tool that takes too long to answer can cause users to lose interest. This target is
+realistic because the corpus only has 88 short chunks, with a maximum of 550 characters 
+each. Therefore, retrieval should be almost instantaneous, and most of the time will be 
+spent generating the answer.
 
 ---
 
