@@ -335,6 +335,55 @@ refused  (best distance 0.910)  How do I write a for loop in Python?
 
      Milestone 3. -->
 
+### Miss 1 — Criterion 4 (chunk sizes)
+
+**Stage:** chunking (`chunker.py::split_documents`)
+
+When I wrote my chunker in unit 1, I only coded the minimum of 150 characters. I
+never added a verification for the maximum of 400. The chunker splits each document by
+paragraphs, and if the last paragraph is too short (under 150 characters with the
+title), it joins it to the previous chunk. The problem is that it does this without
+looking at how long the result will be.
+
+That is what happened in two documents:
+
+- `dining_the_atrium.txt`: the last paragraph ("Hours are 8:00am to 6:00pm
+  weekdays...") has only 123 characters with the title, so it was joined to the first
+  chunk, and that chunk ended up with 421 characters.
+- `dining_verrill_street_grill.txt`: same situation. The last paragraph ("Hours are
+  11:00am to 1:00am daily...") has 116 characters, and after joining it the chunk has
+  409 characters.
+
+Both documents have the same shape, a long description paragraph and then a short
+line. The short line is too small to be its own chunk, and the long paragraph is too 
+big to receive it. So for these documents the two rules fight each other, and the 
+code lets the minimum win. I actually saw these two chunks
+in unit 1 and accepted them, but my criterion says "no chunk longer than 400", so it
+is a miss.
+
+### Miss 2 — Criterion 5 (answers under 5 seconds)
+
+**Stage:** generation (`generate.py::generate`)
+
+Almost all the answers were fast: 14 of 15 took between 0.45 and 1.38 seconds. But
+one answer (Verrill Street Grill, run 2) took 38.95 seconds.
+
+I checked where the time went. Retrieval was identical in the three runs of that
+question (best distance 0.2774 and the same five sources), so retrieval was not the
+problem. I also did not see any `[rate limit]` message in the terminal, so it was
+not my pipeline waiting on purpose (`_wait_for_slot`) or retrying. That leaves the
+call to the model itself: the service just took a long time to respond that one time.
+
+My generation step has no timeout, so it waits as long as the service needs. One slow
+response from the service is enough to break my 5-second target, and I have no
+control over it the way the code is now.
+
+### Is there a pattern?
+
+No. The two misses are not related. The first one is a rule I forgot to code in my
+chunker, and the second one is my system depending on an external service with no
+time limit, that I can not control.
+
 ## The Improvement
 
 **What I changed:**
