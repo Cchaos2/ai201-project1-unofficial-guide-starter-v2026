@@ -309,11 +309,11 @@ refused  (best distance 0.910)  How do I write a for loop in Python?
 
 | # | Criterion | Verdict | How I decided |
 |---|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
-| 3 |  |  |  |
-| 4 |  |  |  |
-| 5 |  |  |  |
+| 1 | Retrieved chunks contain the answer (target 4 of 5) | MET | All three runs were 5/5, above the 4 of 5 target. Retrieval is deterministic, so the three runs are identical. I also read the retrieved sources and the document with the answer was there for all five questions. |
+| 2 | Every answer names a source (target 5 of 5) | MET | All 15 answers (5 questions x 3 runs) contained the filename of a retrieved document, so it was 5/5 in every run. |
+| 3 | Gate stops out-of-corpus questions (target 4 of 5) | MET | The gate refused 5 of 5. The closest out-of-scope question had a distance of 0.848, well above my 0.65 cutoff. The gate is deterministic, so the number is the same in all three runs. |
+| 4 | No chunk shorter than 150 or longer than 400 characters | MISSED | 2 of my 114 chunks are over 400 characters (409 and 421). The target was zero chunks outside the range, so even two is a miss. The chunker is deterministic, so it misses in every run. |
+| 5 | Every answer completes in under 5 seconds (target 5 of 5) | MISSED | Runs were 5/5, 4/5, 5/5. 14 of 15 answers took under 1.4 seconds, but one took 38.95 seconds. The target has to hold in every run, not in most of them, so this is a miss. |
 
 ## Diagnoses
 

@@ -25,6 +25,18 @@ have answers in two documents. However, there are topics that are discussed in s
 documents. Therefore, there is a possibility that for at least one question the right
 document does not reach the top 5 retrieved chunks.
 
+**Reviewed in Unit 2 (original above is unchanged):** For at least 4 of my 5 test questions,
+at least one of the top-5 retrieved chunks must contain every word from that question’s 
+expects phrase.
+
+**Why I reviewed it:** The original did not clearly explain how to determine if a chunk
+contains the answer, which could make the scoring inconsistent. An exact phrase check
+would also measure the wrong thing. For example, my expected phrase “15 hours” does not
+appear exactly in the corpus. The text says “6 hours a week early, 15 in the last three
+weeks,” so a chunk containing the correct answer could still be marked as a fail. The 
+target (4 of 5) remains unchanged; I only clarified how it should be measured. This is
+what scorer.py::judge implements.
+
 ---
 
 ## 2. Every answer names a source
