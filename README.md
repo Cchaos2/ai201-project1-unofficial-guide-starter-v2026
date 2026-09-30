@@ -231,17 +231,70 @@ to decide my chunking strategy and specify my chunk size, overlap, etc.
 
      Milestone 1. -->
 
-| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
-|---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| Criterion                                        | Target        | Run 1    | Run 2    | Run 3    | Verdict |
+| ------------------------------------------------ | ------------- | -------- | -------- | -------- | ------- |
+| 1. Retrieved chunks contain the answer           | 4 of 5        | 5/5      | 5/5      | 5/5      | MET     |
+| 2. Every answer names a source                   | 5 of 5        | 5/5      | 5/5      | 5/5      | MET     |
+| 3. Gate stops out-of-corpus questions            | 4 of 5        | 5/5      | 5/5      | 5/5      | MET     |
+| 4. No chunk shorter than 150 or longer than 400  | 0 of 114 outside | 2 outside | 2 outside | 2 outside | MISSED |
+| 5. Every answer completes in under 5 seconds     | 5 of 5        | 5/5      | 4/5      | 5/5      | MISSED  |
 
 <!-- Underneath, paste the REAL output for each criterion from one of your
      runs — the actual text your system produced, not a description of it.
      Name the file and function that produced it. -->
+
+Source files: `results/run_2026-09-30_0347_before.md` and `results/extra_before.md`.
+Criteria 3 and 4 are deterministic (retrieval, the gate and the chunker give the same
+result every time), so the same number goes in all three columns.
+
+### Real output
+
+**Criterion 1** — produced by `run_eval.py::main`, scored by `scorer.py::judge`, retrieval by `store.py::search`:
+
+```
+| Question | Run 1 | Run 2 | Run 3 |
+| For the CS 340 course, how many hours of workload should we expect during the final weeks? | pass | pass | pass |
+| How much does the campus shuttle cost? | pass | pass | pass |
+| What are the hours for Verrill Street Grill? | pass | pass | pass |
+| How long is the wait for a first counseling appointment? | pass | pass | pass |
+| How much does it cost to use a dryer in Morrow House? | pass | pass | pass |
+```
+
+**Criterion 2** — answers produced by `generate.py::answer_from_chunks`, checked by `timed_eval.py::timed_run_once` (run 1):
+
+```
+For the CS 340 course, you should expect 15 hours a week in the last three weeks when the project lands (course_cs_340.txt and course_cs_340_workload.txt).
+The campus shuttle is free with a student ID (transit_shuttle.txt).
+The hours for Verrill Street Grill are 11:00am to 1:00am daily during term (dining_verrill_street_grill.txt).
+The wait for a first counselling session is usually three or four days (health_center.txt).
+It costs $1.25 to use a dryer in Morrow House (housing_morrow_house.txt and housing_morrow_house_laundry.txt).
+```
+
+**Criterion 3** — produced by `run_eval.py::check_out_of_scope`, cutoff 0.65:
+
+```
+refused  (best distance 0.850)  What is the capital of Peru?
+refused  (best distance 0.934)  How do I change the oil in a diesel engine?
+refused  (best distance 0.856)  Who won the 2026 World Cup?
+refused  (best distance 0.848)  What is the recommended dosage of ibuprofen for a headache?
+refused  (best distance 0.910)  How do I write a for loop in Python?
+-> gate refused 5 of 5
+```
+
+**Criterion 4** — produced by `timed_eval.py::chunk_check`:
+
+```
+- Chunks: 114 total, shortest 152, longest 421, outside 150-400: 2 [409, 421]
+```
+
+**Criterion 5** — produced by `timed_eval.py::timed_run_once` (seconds per answer, one value per question):
+
+```
+- Run 1: under 5s 5/5, seconds: 1.38, 0.58, 0.73, 0.62, 0.65
+- Run 2: under 5s 4/5, seconds: 0.58, 0.45, 38.95, 0.64, 0.65
+- Run 3: under 5s 5/5, seconds: 0.62, 0.73, 0.59, 0.67, 0.57
+```
+
 
 ## Verdicts
 
