@@ -6,6 +6,5 @@ Note: It catches a missing fact, but not an added (made-up) one.
 
 
 def judge(question, expects, answer, results) -> bool:
-    if not expects:
-        return False
-    return expects.lower().strip() in answer.lower()
+    words = expects.lower().split()
+    return any(all(w in r.text.lower() for w in words) for r in results)
