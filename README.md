@@ -206,6 +206,12 @@ I used Claude to analyze the statistics (average, median, percentiles, maximum, 
 in the corpus documents. I manually verified a few of the numbers, and once they were validated, I used that information 
 to decide my chunking strategy and specify my chunk size, overlap, etc.
 
+**3.**
+(Unit 2) I used Claude to help me write and review scorer.py and timed_eval.py, especially 
+the part related to measuring the time taken for each run in Criterion 5. I also used
+Claude to fix the error in chunker.py::split_documents that allowed chunks to be larger
+than 400 characters. I reviewed implementation and verified the results it generated.
+
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
      claims earns nothing.
@@ -458,9 +464,38 @@ fast in all 15 calls. The cause is still there.
 
      Milestone 5. -->
 
+**Criterion 5 (answers under 5 seconds).** It passed in the second log, but it is not
+fixed. Nothing in my code changed for it, and the same slow response from the model
+service can happen again at any time. What I would do is add a timeout to the call in
+`generate.py::generate` (for example 5 seconds) and retry once if it is exceeded. 
+
+**My scorer for criterion 1 can be fooled.** `scorer.py::judge` checks that the words
+of the expected phrase appear in a retrieved chunk. For the shuttle question the
+expected word is "free", and that word also appears in `admin_transcript_requests.txt`,
+which was retrieved too. So that question could pass even if the right chunk was
+missing. I checked the sources by reading them and the right document was there, but
+the scorer alone does not prove it. I did not fix this because of time.
+
+
 ## What I'd Do Differently
 
 <!-- Knowing what you know now — which of your five criteria would you write
      differently, and why?
 
      Milestone 5. -->
+
+Three of my criteria passed at 5/5 on the first try, which tells me those targets
+were too safe.
+
+Regardin specific aspect of the criterion:
+- **Criterion 3 (gate):** my out-of-scope questions were too easy. The closest one
+  was at 0.848 and my cutoff is 0.65, so the gate was never really tested. I would
+  write questions that sound like campus life but are not in the corpus, and ask for
+  5 of 5.
+- **Criterion 5 (speed):** I wrote "under 5 seconds" without thinking that most of
+  the time depends on an external service. I would separate what I control (retrieval
+  time) from what I do not (the model call), and write the target over many calls
+  instead of requiring every single one.
+- **Criterion 4 (chunk sizes):** I wrote a minimum and a maximum without checking
+  that both were possible together for every document. I would test the rule on the
+  corpus before writing the target.
