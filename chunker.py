@@ -27,6 +27,7 @@ from sys import prefix
 
 import config
 from ingest import Document
+import re
 
 
 @dataclass
@@ -80,6 +81,7 @@ def fallback_split(
 
     return chunks
 
+MAX_CHUNK = 400
 
 def split_documents(documents: list[Document]) -> list[Chunk]:
     """
@@ -127,9 +129,18 @@ def split_documents(documents: list[Document]) -> list[Chunk]:
                 merged.append(paragraph)
 
         # If the last chunk is still too short, fold it into the previous one.
+        # unless that would break the 400 maximum. In that case, move sentences
+        # from the end of the previous chunk down into the short one instead.
         if len(merged) > 1 and len(prefix) + len(merged[-1]) < config.MIN_CHUNK:
             last = merged.pop()
-            merged[-1] = merged[-1] + "\n\n" + last
+            if len(prefix) + len(merged[-1]) + 2 + len(last) <= MAX_CHUNK:
+                merged[-1] = merged[-1] + "\n\n" + last
+            else:
+                sentences = re.split(r"(?<=\.)\s+", merged[-1])
+                while len(prefix) + len(last) < config.MIN_CHUNK and len(sentences) > 1:
+                    last = sentences.pop() + "\n\n" + last
+                merged[-1] = " ".join(sentences)
+                merged.append(last)
 
         # Prefix every chunk with the title so it carries context.
         for i, piece in enumerate(merged):

@@ -386,25 +386,48 @@ time limit, that I can not control.
 
 ## The Improvement
 
-**What I changed:**
+**What I changed:** One thing, in `chunker.py::split_documents`. Before, when the last
+paragraph of a document was too short, the chunker always joined it to the previous
+chunk. Now it first checks if that would go over 400 characters. If it would, it moves
+the last sentence of the previous chunk down to the short paragraph instead, so both
+chunks end up between 150 and 400. After the change I rebuilt the index with
+`python app.py index`. Nothing else was changed.
 
-**Why I picked it:**
+**Why I picked it:** It goes directly at Miss 1 in my diagnoses: my chunker never
+checked the 400 maximum, and that produced the two chunks of 421 and 409 characters.
 
 <!-- Connect it to a specific diagnosis above in one sentence. If you can't,
      you picked a fix because it sounded impressive. -->
+
 
 ### Run Log — After
 
 <!-- Same format, same five criteria, three runs each.
      `python run_eval.py --label after` -->
 
-| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
-|---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| Criterion                                        | Target        | Run 1    | Run 2    | Run 3    | Verdict |
+| ------------------------------------------------ | ------------- | -------- | -------- | -------- | ------- |
+| 1. Retrieved chunks contain the answer           | 4 of 5        | 5/5      | 5/5      | 5/5      | MET     |
+| 2. Every answer names a source                   | 5 of 5        | 5/5      | 5/5      | 5/5      | MET     |
+| 3. Gate stops out-of-corpus questions            | 4 of 5        | 5/5      | 5/5      | 5/5      | MET     |
+| 4. No chunk shorter than 150 or longer than 400  | 0 of 116 outside | 0 outside | 0 outside | 0 outside | MET |
+| 5. Every answer completes in under 5 seconds     | 5 of 5        | 5/5      | 5/5      | 5/5      | MET     |
+
+Source files: `results/run_2026-09-30_0516_after.md` and `results/extra_after.md`.
+
+Real output, produced by `app.py index` (`chunker.py::describe`), `timed_eval.py::chunk_check`
+and `timed_eval.py::timed_run_once`:
+
+```
+chunked  116 chunks, 247 characters on average (shortest 152, longest 397), produced by chunker.py::split_documents
+
+- Run 1: names a source 5/5, under 5s 5/5, seconds: 1.51, 0.54, 0.70, 0.63, 0.77
+- Run 2: names a source 5/5, under 5s 5/5, seconds: 0.73, 0.59, 0.66, 0.52, 0.59
+- Run 3: names a source 5/5, under 5s 5/5, seconds: 0.72, 0.55, 0.62, 0.53, 0.78
+- Chunks: 116 total, shortest 152, longest 397, outside 150-400: 0 []
+```
+
+
 
 **Did it help?**
 
@@ -414,6 +437,16 @@ time limit, that I can not control.
      tell.
 
      Milestone 4. -->
+
+Yes, for the failure it was meant to fix. Criterion 4 went from 2 chunks outside the
+range (409 and 421, out of 114 chunks) to 0 outside (out of 116 chunks, longest 397).
+So criterion 4 changed from MISSED to MET.
+
+Criterion 5 went from 5/5, 4/5, 5/5 to 5/5, 5/5, 5/5, but I cannot say my change
+helped there. The slow answer in the first log (38.95 seconds) came from the model
+service, and I did not change anything in generation. This time the service was simply
+fast in all 15 calls. The cause is still there.
+
 
 ## What's Still Broken
 
